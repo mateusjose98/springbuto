@@ -1,0 +1,64 @@
+
+# ignore for maven project
+
+# ==========================================
+# Maven Build Artifacts
+# ==========================================
+target/
+*.jar
+*.war
+*.ear
+*.rar
+*.class
+
+# Keep Maven Wrapper binaries out of history
+# (Leave the scripts 'mvnw' and 'mvnw.cmd' tracked)
+.mvn/wrapper/maven-wrapper.jar
+
+# ==========================================
+# IntelliJ IDEA
+# ==========================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ==========================================
+# Eclipse IDE
+# ==========================================
+.metadata
+.classpath
+.project
+.settings/
+*.launch
+bin/
+
+# ==========================================
+# NetBeans IDE
+# ==========================================
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# ==========================================
+# Operating System Files
+# ==========================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+.directory
