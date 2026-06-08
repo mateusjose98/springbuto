@@ -3,7 +3,6 @@ package io.mateusjose98.web;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.List;
 
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
@@ -12,6 +11,8 @@ import org.apache.catalina.startup.Tomcat;
 import io.mateusjose98.annotations.CController;
 import io.mateusjose98.explorer.ClassExplorer;
 import io.mateusjose98.logger.CustomLogger;
+import io.mateusjose98.structures.ControllersMap;
+import io.mateusjose98.structures.RequestControllerData;
 
 public class SpringButoApplication {
   public static void run(Class<?> sourceClass) {
@@ -28,6 +29,7 @@ public class SpringButoApplication {
       long inicio, fim;
       inicio = System.currentTimeMillis();
       Tomcat tomcat = new Tomcat();
+
       Connector connector = new Connector();
       connector.setPort(8080);
       tomcat.getService().addConnector(connector);
@@ -61,15 +63,29 @@ public class SpringButoApplication {
     for (Method method : Class.forName(className).getDeclaredMethods()) {
       for (Annotation anotacao : method.getAnnotations()) {
         if (anotacao.annotationType().getName().equals("io.mateusjose98.annotations.CGET")) {
-          CustomLogger.info("Método GET encontrado: " + method.getName());
+          RequestControllerData requestControllerData = new RequestControllerData();
+          String path = ((io.mateusjose98.annotations.CGET) anotacao).value();
+          requestControllerData.setHttpMethod("GET");
+          requestControllerData.setUrl(path);
+          requestControllerData.setControllerClass(className);
+          requestControllerData.setControllerMethod(method.getName());
+          ControllersMap.controllersMap.put("GET " + path.toUpperCase(), requestControllerData);
+
         } else if (anotacao.annotationType().getName().equals("io.mateusjose98.annotations.CPOST")) {
-          CustomLogger.info("Método POST encontrado: " + method.getName());
-        } else if (anotacao.annotationType().getName().equals("io.mateusjose98.annotations.CPUT")) {
-          CustomLogger.info("Método PUT encontrado: " + method.getName());
-        } else if (anotacao.annotationType().getName().equals("io.mateusjose98.annotations.CDELETE")) {
-          CustomLogger.info("Método DELETE encontrado: " + method.getName());
+          String path = ((io.mateusjose98.annotations.CPOST) anotacao).value();
+          RequestControllerData requestControllerData = new RequestControllerData();
+          requestControllerData.setHttpMethod("POST");
+          requestControllerData.setUrl(path);
+          requestControllerData.setControllerClass(className);
+          requestControllerData.setControllerMethod(method.getName());
+          ControllersMap.controllersMap.put("POST " + path.toUpperCase(), requestControllerData);
         }
       }
+    }
+
+    for (RequestControllerData data : ControllersMap.controllersMap.values()) {
+      CustomLogger.info("Rota registrada: " + data.getHttpMethod() + " " + data.getUrl() + " -> "
+          + data.getControllerClass() + "." + data.getControllerMethod());
     }
   }
 }

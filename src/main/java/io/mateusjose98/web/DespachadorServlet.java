@@ -1,8 +1,16 @@
 package io.mateusjose98.web;
 
+import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.List;
 
+import com.google.gson.Gson;
+
 import io.mateusjose98.logger.CustomLogger;
+import io.mateusjose98.structures.ControllersIntances;
+import io.mateusjose98.structures.ControllersMap;
+import io.mateusjose98.structures.RequestControllerData;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,7 +24,83 @@ public class DespachadorServlet extends HttpServlet {
     if (ignored.stream().anyMatch(req.getRequestURI()::startsWith)) {
       return;
     }
-    String path = req.getRequestURI();
-    CustomLogger.info("Requisição recebida: " + path);
+    String uri = req.getRequestURI().toUpperCase();
+    String method = req.getMethod();
+    String key = method + " " + uri;
+    RequestControllerData requestData = ControllersMap.controllersMap.get(key);
+    CustomLogger.info(
+        "Received request: " + key + " handler " + (requestData != null ? requestData.getControllerClass() : "null"));
+
+    Object controller;
+    try {
+
+      controller = ControllersIntances.controllersInstances.get(requestData.getControllerClass());
+      if (controller == null) {
+        controller = Class.forName(requestData.getControllerClass()).getDeclaredConstructor().newInstance();
+        ControllersIntances.controllersInstances.put(requestData.getControllerClass(), controller);
+      }
+
+      Method m = null;
+
+      for (Method methodController : controller.getClass().getDeclaredMethods()) {
+        if (methodController.getName().equals(requestData.getControllerMethod())) {
+          m = methodController;
+          break;
+        }
+      }
+
+      if (m == null) {
+        CustomLogger.error("Método " + requestData.getControllerMethod() + " não encontrado na classe "
+            + requestData.getControllerClass());
+        res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        return;
+      }
+      Gson gson = new Gson();
+      PrintWriter writer = new PrintWriter(res.getWriter());
+
+      if (m.getParameterCount() > 0) {
+        Object arg;
+        Parameter parameter = m.getParameters()[0];
+        if (parameter.getAnnotations().length > 0 && parameter.getAnnotations()[0].annotationType().getName()
+            .equals("io.mateusjose98.annotations.CBODY")) {
+          CustomLogger.info("Parâmetro do método " + m.getName() + " na classe " + controller.getClass().getName()
+              + " possui a anotação @CRequestBody. O corpo da requisição será mapeado para o tipo "
+              + parameter.getType().getName());
+          arg = gson.fromJson(readBytesFromRequest(req), parameter.getType());
+          writer.println(gson.toJson(m.invoke(controller, arg)));
+        } else {
+          CustomLogger.warn("O parâmetro do método " + m.getName() + " na classe " + controller.getClass().getName()
+              + " não possui a anotação @CBODY. O corpo da requisição será ignorado.");
+
+        }
+      } else {
+        CustomLogger.warn("O parâmetro do método " + m.getName() + " na classe " + controller.getClass().getName()
+            + " não possui a anotação @CBODY. O corpo da requisição será ignorado.");
+        writer.println(gson.toJson(m.invoke(controller)));
+      }
+
+      writer.flush();
+      writer.close();
+
+    } catch (Exception e) {
+      CustomLogger.error("Erro ao instanciar controlador: " + e.getMessage());
+      e.printStackTrace();
+      res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      return;
+    }
+  }
+
+  private String readBytesFromRequest(HttpServletRequest req) {
+    StringBuilder stringBuilder = new StringBuilder();
+    try (var reader = req.getReader()) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        stringBuilder.append(line);
+      }
+    } catch (Exception e) {
+      CustomLogger.error("Erro ao ler corpo da requisição: " + e.getMessage());
+      e.printStackTrace();
+    }
+    return stringBuilder.toString();
   }
 }

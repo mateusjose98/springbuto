@@ -13,22 +13,26 @@ public class CustomLogger {
 
   public static void info(String message) {
     LocalDateTime now = LocalDateTime.now();
-    System.out.println(GREEN + "[INFO] " + formatter.format(now) + " - " + message + RESET);
+    String threadName = Thread.currentThread().getName();
+    System.out.println(GREEN + "[INFO] " + formatter.format(now) + " [" + threadName + "] - " + message + RESET);
   }
 
   public static void warn(String message) {
     LocalDateTime now = LocalDateTime.now();
-    System.out.println(YELLOW + "[WARN] " + formatter.format(now) + " - " + message + RESET);
+    String threadName = Thread.currentThread().getName();
+    System.out.println(YELLOW + "[WARN] " + formatter.format(now) + " [" + threadName + "] - " + message + RESET);
   }
 
   public static void error(String message) {
     LocalDateTime now = LocalDateTime.now();
-    System.out.println(RED + "[ERROR] " + formatter.format(now) + " - " + message + RESET);
+    String threadName = Thread.currentThread().getName();
+    System.out.println(RED + "[ERROR] " + formatter.format(now) + " [" + threadName + "] - " + message + RESET);
   }
 
   public static void debug(String message) {
     LocalDateTime now = LocalDateTime.now();
-    System.out.println("[DEBUG] " + formatter.format(now) + " - " + message);
+    String threadName = Thread.currentThread().getName();
+    System.out.println("[DEBUG] " + formatter.format(now) + " [" + threadName + "] - " + message);
   }
 
 }

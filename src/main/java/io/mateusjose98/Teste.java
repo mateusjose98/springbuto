@@ -8,14 +8,17 @@ import io.mateusjose98.annotations.CPOST;
 @CController
 public class Teste {
 
-  @CGET("/teste")
-  public String teste() {
-    return "Teste";
+  @CGET("/all")
+  public Produto listar() {
+    Produto p = new Produto();
+    p.setId(1);
+    p.setNome("Produto 1");
+    return p;
   }
 
-  @CPOST("/teste2")
-  public String teste2(@CBODY String body) {
-    return "Teste2";
+  @CPOST("/create")
+  public Produto criar(@CBODY Produto produto) {
+    return produto;
   }
 
 }
