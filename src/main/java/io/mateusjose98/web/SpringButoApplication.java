@@ -13,6 +13,7 @@ import io.mateusjose98.explorer.ClassExplorer;
 import io.mateusjose98.logger.CustomLogger;
 import io.mateusjose98.structures.ControllersMap;
 import io.mateusjose98.structures.RequestControllerData;
+import io.mateusjose98.structures.ServiceImplementationMap;
 
 public class SpringButoApplication {
   public static void run(Class<?> sourceClass) {
@@ -54,9 +55,19 @@ public class SpringButoApplication {
         if (anotacao.annotationType().getName().equals(CController.class.getName())) {
           CustomLogger.info("Controlador encontrado: " + klass);
           extractMethod(klass);
+        } else if (anotacao.annotationType().getName().equals("io.mateusjose98.annotations.CService")) {
+          CustomLogger.info("Serviço encontrado: " + klass);
+
+          for (Class<?> interfaceClass : Class.forName(klass).getInterfaces()) {
+            CustomLogger.info("Registrando serviço: " + interfaceClass.getName() + " -> " + klass);
+            ServiceImplementationMap.implementations.put(interfaceClass.getName(), klass);
+
+          }
+
         }
       }
     }
+
   }
 
   private static void extractMethod(String className) throws ClassNotFoundException {
